@@ -110,13 +110,69 @@
     end.appendChild(actions);
   }
 
+  let centerFrame = 0;
+
+  function ensureSpacers(track) {
+    let lead = track.querySelector(":scope > .chain-scroll-lead");
+    let tail = track.querySelector(":scope > .chain-scroll-tail");
+    if (!lead) {
+      lead = document.createElement("div");
+      lead.className = "chain-scroll-lead";
+      lead.setAttribute("aria-hidden", "true");
+      track.prepend(lead);
+    }
+    if (!tail) {
+      tail = document.createElement("div");
+      tail.className = "chain-scroll-tail";
+      tail.setAttribute("aria-hidden", "true");
+      track.append(tail);
+    }
+    const pad = Math.max(0, track.clientWidth / 2);
+    const basis = pad + "px";
+    if (lead.style.flexBasis !== basis) lead.style.flexBasis = basis;
+    if (tail.style.flexBasis !== basis) tail.style.flexBasis = basis;
+  }
+
+  function centerLastCard() {
+    const track = document.querySelector(".chain-track");
+    if (!track) return;
+    ensureSpacers(track);
+    const cards = track.querySelectorAll(".placed-card");
+    const last = cards[cards.length - 1];
+    if (!last) return;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const cardRect = last.getBoundingClientRect();
+      const delta = cardRect.left + cardRect.width / 2 - window.innerWidth / 2;
+      if (Math.abs(delta) < 2) break;
+      const next = track.scrollLeft + delta;
+      const max = Math.max(0, track.scrollWidth - track.clientWidth);
+      track.scrollLeft = Math.min(max, Math.max(0, next));
+    }
+  }
+
+  function scheduleCenter() {
+    cancelAnimationFrame(centerFrame);
+    centerFrame = requestAnimationFrame(() => {
+      centerFrame = requestAnimationFrame(centerLastCard);
+    });
+  }
+
   function scan() {
     document.querySelectorAll(".chain-open-end").forEach(mount);
+    scheduleCenter();
   }
 
   const style = document.createElement("style");
   style.textContent = [
-    ".chain-open-end.open-end-with-hints{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:14px;min-width:max-content;white-space:normal;}",
+    "html:has(.game-shell),body:has(.game-shell){height:100%;overflow:hidden;}",
+    ".app-shell.game-shell:not(:has(.results-screen)){height:100dvh;max-height:100dvh;overflow:hidden;box-sizing:border-box;}",
+    ".app-shell.game-shell:not(:has(.results-screen)) .game-screen{height:100%;max-height:100%;min-height:0;width:min(100%,1320px);max-width:100%;overflow:hidden;}",
+    ".app-shell.game-shell .chain-board,.app-shell.game-shell .chain-track,.app-shell.game-shell .hand-section,.app-shell.game-shell .hand-carousel,.app-shell.game-shell .game-topbar{min-width:0;max-width:100%;}",
+    ".app-shell.game-shell .chain-board{overflow:hidden;}",
+    ".app-shell.game-shell .chain-track{overflow-x:auto;overflow-y:hidden;scroll-behavior:auto;}",
+    ".app-shell.game-shell .placed-card,.app-shell.game-shell .chain-open-end,.chain-scroll-lead,.chain-scroll-tail{flex:0 0 auto;}",
+    ".chain-scroll-lead,.chain-scroll-tail{height:1px;pointer-events:none;}",
+    ".chain-open-end.open-end-with-hints{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:14px;min-width:0;width:max-content;white-space:normal;}",
     ".open-end-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}",
     ".open-end-button{min-height:44px;padding:0 14px;border:1px solid hsl(20 78% 57% / .4);border-radius:12px;background:hsl(43 42% 98%);color:hsl(20 67% 40%);font:700 13px/1.2 'Golos Text',sans-serif;cursor:pointer;}",
     ".open-end-button:hover{transform:translateY(-1px);background:hsl(20 78% 57% / .12);}",
@@ -134,6 +190,7 @@
 
   const root = document.getElementById("root");
   if (root) new MutationObserver(scan).observe(root, { childList: true, subtree: true });
+  window.addEventListener("resize", scheduleCenter);
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", scan);
   } else {
