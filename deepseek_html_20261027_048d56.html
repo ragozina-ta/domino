@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивный гайд: Тривиальные названия</title>
+    <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --background: hsl(43 37% 95%);
+            --foreground: hsl(164 25% 17%);
+            --border: hsl(158 15% 81%);
+            --card: hsl(43 42% 98%);
+            --primary: hsl(164 40% 27%);
+            --primary-foreground: hsl(43 42% 98%);
+            --secondary: hsl(159 23% 90%);
+            --muted-foreground: hsl(162 11% 43%);
+            --accent: hsl(20 78% 57%);
+            --font-sans: 'Golos Text', sans-serif;
+            --font-serif: 'Manrope', sans-serif;
+            --radius: 1rem;
+            
+            /* Цвета для изученных карточек */
+            --studied-bg: hsl(159 35% 88%);
+            --studied-text: hsl(164 40% 27%);
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--background);
+            color: var(--foreground);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #presentation-container {
+            width: 95%;
+            max-width: 1100px;
+            height: 90vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .slide {
+            display: none;
+            padding: 30px 40px 100px 40px; 
+            height: 100%;
+            box-sizing: border-box;
+            animation: fadeIn 0.4s ease-out;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        .slide.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-family: var(--font-serif);
+            color: var(--primary);
+            font-size: 3.5rem;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+        }
+
+        h2 {
+            font-family: var(--font-serif);
+            color: var(--foreground);
+            font-size: 2rem;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--foreground);
+        }
+
+        .subtitle {
+            color: var(--muted-foreground);
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+
+        .label-uppercase {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.14em;
+            color: var(--muted-foreground);
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            transition: all 0.2s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 35px -25px hsl(164 28% 19% / 0.28);
+            border-color: var(--primary);
+        }
+
+        .name {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 10px;
+            color: var(--foreground);
+        }
+
+        /* Формулы (по умолчанию) */
+        .formula {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--foreground);
+            background: var(--secondary);
+            padding: 6px 12px;
+            border-radius: 8px;
+            display: inline-block;
+            cursor: help;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            align-self: flex-start;
+            user-select: none;
+        }
+
+        .formula:hover {
+            background: var(--primary);
+            color: var(--primary-foreground);
+            border-color: var(--primary);
+        }
+
+        /* Стили для ИЗУЧЕННЫХ формул */
+        .formula.studied {
+            background: var(--studied-bg);
+            color: var(--studied-text);
+            border-color: hsl(159 35% 75%);
+        }
+        
+        .formula.studied::after {
+            content: "✓";
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.7rem;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Всплывающее окно */
+        #global-tooltip {
+            visibility: hidden;
+            width: 320px;
+            background-color: var(--card);
+            color: var(--foreground);
+            text-align: left;
+            border-radius: var(--radius);
+            padding: 16px;
+            position: fixed; 
+            z-index: 99999; 
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            transform: translateY(5px);
+            box-shadow: 0 25px 70px -48px hsl(164 28% 19% / 0.38);
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            pointer-events: none; 
+        }
+
+        #global-tooltip.show {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #global-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: var(--card) transparent transparent transparent;
+        }
+
+        .tooltip-class {
+            display: block;
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+        }
+
+        .tooltip-desc { display: block; margin-top: 8px; }
+
+        /* Блоки Ловушек */
+        .alert {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .alert-danger {
+            background-color: hsl(8 73% 92% / 0.3);
+            border-color: hsl(8 64% 60% / 0.3);
+        }
+
+        .alert-title {
+            font-family: var(--font-serif);
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alert-danger .alert-title { color: hsl(8 64% 50%); }
+
+        .alert ul { margin: 0; padding-left: 20px; }
+        .alert li { margin-bottom: 10px; font-size: 0.95rem; line-height: 1.5; }
+
+        .game-transition {
+            text-align: left;
+            margin-top: 30px;
+            padding: 24px;
+            background-color: var(--primary);
+            border-radius: var(--radius);
+            color: var(--primary-foreground);
+        }
+
+        .game-transition h3 {
+            font-family: var(--font-serif);
+            margin: 0 0 10px 0;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+        
+        .game-transition p { color: var(--primary-foreground); opacity: 0.9; margin: 0; }
+
+        /* Навигация */
+        .navigation {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 40px;
+            box-sizing: border-box;
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            z-index: 10;
+            border-bottom-left-radius: var(--radius);
+            border-bottom-right-radius: var(--radius);
+        }
+
+        .nav-btn {
+            background-color: transparent;
+            color: var(--muted-foreground);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-family: var(--font-sans);
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            background-color: var(--secondary);
+            color: var(--primary);
+        }
+
+        /* Стили для активной кнопки "Дальше" */
+        .nav-btn.primary-action {
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+            border-color: var(--primary);
+        }
+        
+        .nav-btn.primary-action:hover:not(:disabled) {
+            background-color: hsl(164 42% 23%);
+            color: var(--primary-foreground);
+        }
+
+        /* Стили для ЗАБЛОКИРОВАННОЙ кнопки "Дальше" */
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background-color: var(--secondary);
+            color: var(--muted-foreground);
+            border-color: var(--border);
+        }
+
+        .nav-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .slide-indicator {
+            font-size: 0.85rem;
+            color: var(--muted-foreground);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .progress-counter {
+            font-size: 0.75rem;
+            color: var(--accent);
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .mockup-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--muted-foreground);
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+        .mockup-badge::before {
+            content: "";
+            display: block;
+            width: 9px;
+            height: 9px;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+
+<div id="global-tooltip">
+    <span class="tooltip-class" id="tooltip-class-text">Класс:</span>
+    <span class="tooltip-desc" id="tooltip-desc-text">Описание</span>
+</div>
+
+<div id="presentation-container">
+    <!-- Слайд 1: Титульный -->
+    <div class="slide active" id="slide1">
+        <div style="margin-top: 10%; max-width: 700px;">
+            <div class="mockup-badge">Интерактивный гайд</div>
+            <h1>Тривиальные названия</h1>
+            <p class="subtitle">Все «вторые имена» химии. Наводите на формулы, чтобы прочитать подсказки. Изученные формулы будут отмечаться галочкой.</p>
+            
+            <div style="display: flex; gap: 15px; margin-top: 40px; align-items: center; flex-wrap: wrap;">
+                <div class="formula" data-class="Класс: Основный оксид" data-desc="«Не гашена» — ещё не встречалась с водой. Залей водой: зашипит и разогреется.">CaO</div>
+                <div class="formula" data-class="Класс: Основание" data-desc="Caustic (греч. kaustikos) — «жгучий»: разъедает кожу. Натр — мужской род, едкий.">NaOH</div>
+                <div class="formula" data-class="Класс: Средняя соль (кристаллогидрат)" data-desc="Купорос — кристаллогидрат сульфата. Cu → медный. Ярко-синий, им опрыскивают деревья.">CuSO₄·5H₂O</div>
+                <div class="formula" data-class="Класс: Средняя соль" data-desc="«Поваренная» — та, что у повара. «Каменная» — та, что добывают в шахтах.">NaCl</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Слайд 2: Оксиды -->
+    <div class="slide" id="slide2">
+        <span class="label-uppercase">Блок 1</span>
+        <h2>Оксиды и их логика</h2>
+        <p class="subtitle">Наведите на каждую формулу, чтобы изучить её. Как только изучите все — кнопка «Дальше» станет активной.</p>
+        
+        <div class="grid-container">
+            <div class="card">
+                <div class="formula" data-class="Класс: Несолеобразующий оксид" data-desc="Угар — от неполного сгорания угля. Ни соли, ни кислоты не даёт.">CO</div>
+                <div class="name">Угарный газ</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Кислотный оксид" data-desc="В воде даёт слабую угольную кислоту H₂CO₃ — отсюда «углекислый».">CO₂</div>
+                <div class="name">Углекислый газ</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Несолеобразующий оксид" data-desc="Первый наркоз в истории: пациенты смеялись прямо на столе. Кислоты не образует.">N₂O</div>
+                <div class="name">Веселящий газ</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Кислотный оксид" data-desc="Рыжий шлейф над трубой похож на лисий хвост. Ангидрид сразу двух кислот: HNO₂ и HNO₃.">NO₂</div>
+                <div class="name">Бурый газ, лисий хвост</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Кислотный оксид" data-desc="«без воды»: добавь воду и получишь кислоту. SO₂ + H₂O → H₂SO₃, серн-истая: кислорода меньше.">SO₂</div>
+                <div class="name">Сернистый газ</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Кислотный оксид" data-desc="Ангидрид — «без воды»: добавь воду и получишь кислоту. SO₃ + H₂O → H₂SO₄, серная: кислорода больше.">SO₃</div>
+                <div class="name">Серный ангидрид</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Кислотный оксид" data-desc="Кремне-зём — земля, содержащая кремний. Обычный речной песок и есть SiO₂.">SiO₂</div>
+                <div class="name">Кремнезём</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Кислотный оксид" data-desc="Ангидрид — «без воды»: добавь воду и получишь кислоту. P₂O₅ + 3H₂O → 2H₃PO₄, фосфорная.">P₂O₅</div>
+                <div class="name">Фосфорный ангидрид</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Основный оксид" data-desc="«Не гашена» — ещё не встречалась с водой. Залей водой: зашипит и разогреется.">CaO</div>
+                <div class="name">Негашёная известь</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Основный оксид" data-desc="«Жжёная» — получена прокаливанием MgCO₃. Ею сушат руки гимнасты и тяжелоатлеты.">MgO</div>
+                <div class="name">Жжёная магнезия</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Амфотерный оксид" data-desc="Белый пигмент для красок. Не путай с основными оксидами: ZnO амфотерный, реагирует и с кислотой, и со щёлочью.">ZnO</div>
+                <div class="name">Цинковые белила</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Амфотерный оксид" data-desc="Самый белый из пигментов: он в краске, зубной пасте и солнцезащитном креме.">TiO₂</div>
+                <div class="name">Титановые белила</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Оксид (двойной)" data-desc="Ярко-оранжевая краска по металлу. Внутри 2PbO·PbO₂ — оксид двойной, как железная окалина.">Pb₃O₄</div>
+                <div class="name">Свинцовый сурик</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Оксид (двойной)" data-desc="Окалина — то, что «окалывается» с раскалённого железа. Внутри FeO·Fe₂O₃, поэтому оксид двойной. Амфотерным его называют по ошибке.">Fe₃O₄</div>
+                <div class="name">Железная окалина</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Амфотерный оксид" data-desc="Глино-зём — земля, из которой состоит глина. Ювелирный корунд — это рубин и сапфир.">Al₂O₃</div>
+                <div class="name">Глинозём, корунд</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Руда" data-desc="Назван по деревне Ле-Бо во Франции. Главная руда алюминия: тот же глинозём, но с водой.">Al₂O₃·nH₂O</div>
+                <div class="name">Боксит</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Оксид" data-desc="Формально — оксид водорода.">H₂O</div>
+                <div class="name">Вода, лёд</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Слайд 3: Основания и Кислоты -->
+    <div class="slide" id="slide3">
+        <span class="label-uppercase">Блок 2</span>
+        <h2>Основания и Кислоты</h2>
+        <p class="subtitle">Едкие щёлочи и исторические названия кислот.</p>
+        
+        <div class="grid-container" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+            <div class="card">
+                <div class="formula" data-class="Класс: Основание (щёлочь)" data-desc="Caustic (греч. kaustikos) — «жгучий»: разъедает кожу. Натр — мужской род, едкий.">NaOH</div>
+                <div class="name">Едкий натр, каустическая сода</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Основание (щёлочь)" data-desc="Тоже мужской род: едкий калий. Пара к едкому натру.">KOH</div>
+                <div class="name">Едкое кали</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Основание (щёлочь)" data-desc="Гашение — реакция СаО с водой. Прозрачный насыщенный раствор зовут известковой водой, мутную взвесь — молоком.">Ca(OH)₂</div>
+                <div class="name">Гашёная известь</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Основание (слабое)" data-desc="Резкий запах из аптечки. Не путай с нашатырём — это NH₄Cl, твёрдая соль!">NH₃·H₂O</div>
+                <div class="name">Нашатырный спирт</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Комплексное основание" data-desc="«аммиачный раствор оксида серебра»: даёт реакцию серебряного зеркала.">[Ag(NH₃)₂]OH</div>
+                <div class="name">Аммиачный раствор оксида серебра</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Кислота" data-desc="«Соляная» — её получали из поваренной соли: NaCl + H₂SO₄. Кислота сильная.">HCl</div>
+                <div class="name">Соляная кислота</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Кислота" data-desc="От плавикового шпата CaF₂. Единственная слабая среди галогеноводородных, травит стекло.">HF</div>
+                <div class="name">Плавиковая кислота</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Слайд 4: Соли (Часть 1) -->
+    <div class="slide" id="slide4">
+        <span class="label-uppercase">Блок 3</span>
+        <h2>Соли (Часть 1)</h2>
+        <p class="subtitle">Классические соли, селитры и минералы.</p>
+        
+        <div class="grid-container">
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль" data-desc="«Поваренная» — та, что у повара. «Каменная» — та, что добывают в шахтах.">NaCl</div>
+                <div class="name">Поваренная соль, галит</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Кислая соль" data-desc="Есть «Н» в формуле — значит кислая соль. Самая частая позиция в задании 5.">NaHCO₃</div>
+                <div class="name">Пищевая (питьевая) сода</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль" data-desc="Кальцинировать — прокаливать; к кальцию отношения не имеет. Воды в формуле нет, водорода тоже: соль средняя.">Na₂CO₃</div>
+                <div class="name">Кальцинированная сода</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль (кристаллогидрат)" data-desc="Кристаллогидрат — соль с водой в решётке. Десять молекул воды дают крупные прозрачные кристаллы.">Na₂CO₃·10H₂O</div>
+                <div class="name">Кристаллическая сода</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль" data-desc="От англ. pot ash — «зола из горшка»: его выпаривали из древесной золы.">K₂CO₃</div>
+                <div class="name">Поташ</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль" data-desc="Одно вещество в трёх обличьях: рыхлый мел, кристаллический мрамор, порода известняк.">CaCO₃</div>
+                <div class="name">Мел, мрамор, известняк</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль (кристаллогидрат)" data-desc="Тот самый гипс на сломанной руке. Прокалить — уйдёт вода, получится алебастр.">CaSO₄·2H₂O</div>
+                <div class="name">Гипс</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль" data-desc="Открыл француз Клод Бертолле. Из неё делают головки спичек. Соль хлорноватой кислоты HClO₃.">KClO₃</div>
+                <div class="name">Бертолетова соль</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль" data-desc="Нашатырь — твёрдая соль. Нашатырный спирт — раствор аммиака NH₃·H₂O. Разные вещества!">NH₄Cl</div>
+                <div class="name">Нашатырь</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль" data-desc="От лат. lapis infernalis — «адский камень»: им прижигали раны. Чернеет на свету.">AgNO₃</div>
+                <div class="name">Ляпис</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль" data-desc="Её веками добывали в пустыне Атакама в Чили — отсюда второе имя.">NaNO₃</div>
+                <div class="name">Натриевая (чилийская) селитра</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль" data-desc="Её везли из Индии. Главный компонент чёрного пороха.">KNO₃</div>
+                <div class="name">Калийная (индийская) селитра</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль" data-desc="Самое ходовое азотное удобрение: азот сразу в двух ионах.">NH₄NO₃</div>
+                <div class="name">Аммиачная селитра</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Основная соль" data-desc="Зелёный камень и патина на медных крышах. Есть группа ОН — значит основная соль.">(CuOH)₂CO₃</div>
+                <div class="name">Малахит</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Бинарное соединение (сульфид)" data-desc="От греч. pyr — «огонь»: искрит о сталь. Это дисульфид, соль H₂S₂. Сероводородной H₂S отвечают сульфиды.">FeS₂</div>
+                <div class="name">Пирит, железный колчедан</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Слайд 5: Соли (Часть 2) -->
+    <div class="slide" id="slide5">
+        <span class="label-uppercase">Блок 4</span>
+        <h2>Соли (Часть 2) и растворы</h2>
+        <p class="subtitle">Кристаллогидраты (купоросы), степени окисления и необычные названия.</p>
+        
+        <div class="grid-container">
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль (кристаллогидрат)" data-desc="Купорос — кристаллогидрат сульфата. Cu → медный. Ярко-синий, им опрыскивают деревья.">CuSO₄·5H₂O</div>
+                <div class="name">Медный купорос</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль (кристаллогидрат)" data-desc="Купорос — кристаллогидрат сульфата. Fe → железный. Бледно-зелёные кристаллы.">FeSO₄·7H₂O</div>
+                <div class="name">Железный купорос</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль (кристаллогидрат)" data-desc="Купорос — кристаллогидрат сульфата. Смотри на металл: Zn → цинковый. Бесцветные кристаллы.">ZnSO₄·7H₂O</div>
+                <div class="name">Цинковый купорос</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль (кристаллогидрат)" data-desc="Открыл немец Иоганн Глаубер и назвал «чудесной солью»: сильное слабительное.">Na₂SO₄·10H₂O</div>
+                <div class="name">Глауберова соль</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Двойная соль" data-desc="Два металла в одной формуле — соль двойная. Ими дубили кожу и останавливали кровь.">KAl(SO₄)₂·12H₂O</div>
+                <div class="name">Алюмокалиевые квасцы</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Раствор" data-desc="От лат. oleum — «масло»: тяжёлая маслянистая жидкость, дымит на воздухе. Растворы SO₃ в H₂SO₄ (конц.)">H₂SO₄·SO₃</div>
+                <div class="name">Олеум</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Раствор" data-desc="В воде хлор частично реагирует: Cl₂ + H₂O ⇄ HCl + HClO. Не путай с хлорной кислотой HClO₄!">Cl₂ (p-p)</div>
+                <div class="name">Хлорная вода</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Раствор" data-desc="Жёлто-оранжевый раствор брома. Обесцвечивается непредельными углеводородами — алкенами, алкинами, алкадиенами.">Br₂ (p-p)</div>
+                <div class="name">Бромная вода</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль" data-desc="Старое название по высшей степени окисления: «хлорное» — это железо +3.">FeCl₃</div>
+                <div class="name">Хлорное железо</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Средняя соль" data-desc="«Истое» — низшая степень окисления, железо +2. Правило то же, что у сернистой кислоты.">FeCl₂</div>
+                <div class="name">Хлористое железо</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Бинарное соединение (сульфид)" data-desc="Сера плюс углерод, и всё. Аналог CO₂, где кислород заменён серой.">CS₂</div>
+                <div class="name">Сероуглерод</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Хлорангидрид" data-desc="От греч. phos — «свет»: получен на свету. Боевое отравляющее вещество Первой мировой. Не оксид, хотя кислород в формуле есть.">COCl₂</div>
+                <div class="name">Фосген</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Слайд 6: Простые вещества -->
+    <div class="slide" id="slide6">
+        <span class="label-uppercase">Блок 5</span>
+        <h2>Простые вещества и аллотропия</h2>
+        <p class="subtitle">Один и тот же элемент может выглядеть совершенно по-разному.</p>
+        
+        <div class="grid-container" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+            <div class="card">
+                <div class="formula" data-class="Класс: Простое вещество" data-desc="От греч. ozon — «пахнущий»: запах свежести после грозы. Аллотропная модификация кислорода.">O₃</div>
+                <div class="name">Озон</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Простое вещество" data-desc="От греч. grapho — «пишу»: им пишет карандаш. Слоистая решётка, поэтому мягкий и проводит ток.">C (графит)</div>
+                <div class="name">Графит</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Простое вещество" data-desc="От греч. adamas «несокрушимый». Тот же углерод, но каждый атом связан с четырьмя соседями.">C (алмаз)</div>
+                <div class="name">Алмаз</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Бинарное соединение (карбид)" data-desc="Карбо (углерод) + корунд: абразив, почти такой же твёрдый, как корунд.">SiC</div>
+                <div class="name">Карборунд</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Бинарное соединение (летучее водородное)" data-desc="Фосфор + «ин», как у аминов. Крайне ядовит, пахнет чесноком.">PH₃</div>
+                <div class="name">Фосфин</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Бинарное соединение (летучее водородное)" data-desc="Si (силициум) + «-ан», по образцу метана CH₄. Аналог метана у кремния.">SiH₄</div>
+                <div class="name">Силан</div>
+            </div>
+            <div class="card">
+                <div class="formula" data-class="Класс: Бинарное соединение (летучее водородное)" data-desc="От храма Амона в Египте, возле которого добывали соли аммония.">NH₃</div>
+                <div class="name">Аммиак</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Слайд 7: Ловушки -->
+    <div class="slide" id="slide7">
+        <span class="label-uppercase">Важно</span>
+        <h2>Химические «Ловушки»</h2>
+        <p class="subtitle">Самые частые ошибки на экзамене.</p>
+        
+        <div class="alert alert-danger">
+            <div class="alert-title">⚠️ Нашатырь ≠ нашатырный спирт</div>
+            <ul>
+                <li><b>Нашатырь</b> — <span class="formula" style="font-size: 0.9rem; padding: 4px 8px;" data-class="Класс: Средняя соль" data-desc="Нашатырь — твёрдая соль.">NH₄Cl</span>, твёрдая соль. <b>Класс: средняя соль.</b></li>
+                <li><b>Нашатырный спирт</b> — <span class="formula" style="font-size: 0.9rem; padding: 4px 8px;" data-class="Класс: Слабое основание" data-desc="Нашатырный спирт — раствор аммиака NH₃·H₂O. Разные вещества!">NH₃·H₂O</span>, водный раствор аммиака. <b>Класс: слабое основание.</b></li>
+            </ul>
+        </div>
+
+        <div class="alert">
+            <div class="alert-title">🧂 Три разные соды</div>
+            <ul>
+                <li><b>Кальцинированная</b> — <span class="formula" style="font-size: 0.9rem; padding: 4px 8px;" data-class="Класс: Средняя соль" data-desc="Кальцинировать — прокаливать; к кальцию отношения не имеет. Воды в формуле нет, водорода тоже: соль средняя.">Na₂CO₃</span>. <b>Класс: средняя соль.</b></li>
+                <li><b>Кристаллическая</b> — <span class="formula" style="font-size: 0.9rem; padding: 4px 8px;" data-class="Класс: Кристаллогидрат" data-desc="Кристаллогидрат — соль с водой в решётке. Десять молекул воды дают крупные прозрачные кристаллы.">Na₂CO₃·10H₂O</span>. <b>Класс: кристаллогидрат.</b></li>
+                <li><b>Питьевая</b> — <span class="formula" style="font-size: 0.9rem; padding: 4px 8px;" data-class="Класс: Кислая соль" data-desc="Есть «Н» в формуле — значит кислая соль. Самая частая позиция в задании 5.">NaHCO₃</span>. <b>Класс: кислая соль.</b></li>
+            </ul>
+        </div>
+        
+        <div class="alert">
+            <div class="alert-title">🪨 Известь</div>
+            <ul>
+                <li><b>Негашёная</b> — <span class="formula" style="font-size: 0.9rem; padding: 4px 8px;" data-class="Класс: Основный оксид" data-desc="«Не гашена» — ещё не встречалась с водой. Залей водой: зашипит и разогреется.">CaO</span>. <b>Класс: основный оксид.</b></li>
+                <li><b>Гашёная</b> — <span class="formula" style="font-size: 0.9rem; padding: 4px 8px;" data-class="Класс: Основание (щёлочь)" data-desc="Гашение — реакция СаО с водой. Прозрачный насыщенный раствор зовут известковой водой, мутную взвесь — молоком.">Ca(OH)₂</span>. <b>Класс: основание.</b></li>
+            </ul>
+        </div>
+
+        <div class="game-transition">
+            <h3>Вы успешно изучили все формулы!</h3>
+            <p>Теперь давайте проверим вашу память на практике и сыграем в <b>Химическую цепочку</b>!</p>
+        </div>
+    </div>
+
+    <!-- Навигация -->
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)" disabled>← Вернуться</button>
+        
+        <div class="nav-center">
+            <div class="slide-indicator" id="slideIndicator">1 / 7</div>
+            <div class="progress-counter" id="progressCounter">Изучено: 0 / 0</div>
+        </div>
+        
+        <button class="nav-btn primary-action" id="nextBtn" onclick="changeSlide(1)">Я всё изучил, дальше →</button>
+    </div>
+</div>
+
+<script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length; 
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const indicator = document.getElementById('slideIndicator');
+    const progressCounter = document.getElementById('progressCounter');
+
+    function updateSlideState() {
+        const activeSlide = slides[currentSlide];
+        const formulas = activeSlide.querySelectorAll('.formula');
+        
+        // Если на слайде нет формул (например, титульный), кнопка разблокирована
+        if (formulas.length === 0) {
+            nextBtn.disabled = false;
+            progressCounter.style.display = 'none';
+        } else {
+            // Считаем, сколько изучено
+            let studiedCount = 0;
+            formulas.forEach(f => {
+                if (f.classList.contains('studied')) studiedCount++;
+            });
+
+            // Обновляем текст счетчика
+            progressCounter.textContent = `Изучено: ${studiedCount} / ${formulas.length}`;
+            progressCounter.style.display = 'block';
+
+            // Блокируем кнопку, если изучены не все
+            if (studiedCount === formulas.length) {
+                nextBtn.disabled = false;
+            } else {
+                nextBtn.disabled = true;
+            }
+        }
+
+        // Последний слайд - меняем текст кнопки
+        if (currentSlide === totalSlides - 1) {
+            nextBtn.textContent = "Перейти к игре";
+        } else {
+            nextBtn.textContent = "Я всё изучил, дальше →";
+        }
+    }
+
+    function showSlide(index) {
+        slides.forEach((slide, i) => {
+            slide.classList.remove('active');
+            if (i === index) {
+                slide.classList.add('active');
+            }
+        });
+
+        currentSlide = index;
+        prevBtn.disabled = index === 0;
+        indicator.textContent = `${index + 1} / ${totalSlides}`;
+        
+        updateSlideState();
+    }
+
+    const GAME_PAGE = "game/index.html";
+
+    function goToGame() {
+        window.location.href = GAME_PAGE;
+    }
+
+    function changeSlide(direction) {
+        let nextIndex = currentSlide + direction;
+        if (nextIndex < 0) nextIndex = 0;
+        if (nextIndex >= totalSlides) {
+            goToGame();
+            return;
+        }
+        showSlide(nextIndex);
+        hideTooltip();
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' && !nextBtn.disabled) {
+            changeSlide(1);
+        } else if (e.key === 'ArrowLeft' && !prevBtn.disabled) {
+            changeSlide(-1);
+        }
+    });
+
+    // --- ЛОГИКА ВСПЛЫВАЮЩЕГО ОКНА И ОТМЕТКИ "ИЗУЧЕНО" ---
+    const tooltip = document.getElementById('global-tooltip');
+    const tooltipClassText = document.getElementById('tooltip-class-text');
+    const tooltipDescText = document.getElementById('tooltip-desc-text');
+    const formulas = document.querySelectorAll('.formula');
+
+    formulas.forEach(formula => {
+        formula.addEventListener('mouseenter', (e) => {
+            const classText = e.target.getAttribute('data-class');
+            const descText = e.target.getAttribute('data-desc');
+
+            if(!classText || !descText) return;
+
+            // Показываем подсказку
+            tooltipClassText.textContent = classText;
+            tooltipDescText.textContent = descText;
+            tooltip.classList.add('show');
+            positionTooltip(e.target);
+
+            // Отмечаем как изученное (только если еще не изучено)
+            if (!e.target.classList.contains('studied')) {
+                e.target.classList.add('studied');
+                updateSlideState(); // Пересчитываем прогресс
+            }
+        });
+
+        formula.addEventListener('mouseleave', () => {
+            hideTooltip();
+        });
+    });
+
+    function positionTooltip(targetElement) {
+        const rect = targetElement.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        
+        let top = rect.top - tooltipRect.height - 12;
+        let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+
+        if (top < 10) {
+            top = rect.bottom + 12;
+        }
+
+        if (left < 10) left = 10;
+        if (left + tooltipRect.width > window.innerWidth - 10) {
+            left = window.innerWidth - tooltipRect.width - 10;
+        }
+
+        tooltip.style.top = `${top}px`;
+        tooltip.style.left = `${left}px`;
+    }
+
+    function hideTooltip() {
+        tooltip.classList.remove('show');
+    }
+    
+    // Инициализация
+    showSlide(0);
+</script>
+
+</body>
+</html>
